@@ -1,26 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { messagingApi } from "@line/bot-sdk";
+import crypto from "crypto";
+import { sendLineTextMessage } from "@/server/send-line-message";
 
-const client = new messagingApi.MessagingApiClient({
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN!,
-});
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();
 
-    if (!message || typeof message !== "string") {
+    if (typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    await client.pushMessage({
-      to: process.env.LINE_USER_ID!,
-      messages: [{ type: "text", text: message }],
-    });
+    await sendLineTextMessage(message.trim());
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: {
+        id: crypto.randomUUID(),
+        text: message.trim(),
+        from: "user",
+        timestamp: Date.now(),
+      },
+    });
   } catch (error) {
     console.error("Send message error:", error);
+
+    if (error instanceof Error && error.message === "LINE configuration is incomplete") {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
     return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
   }
 }
