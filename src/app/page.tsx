@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatMessages } from "@/components/chat/chat-messages";
+import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
 import type { ChatMessage, SendResponse } from "@/features/chat/types";
 
 export default function Home() {
@@ -18,6 +19,11 @@ export default function Home() {
     const trimmedMessage = draft.trim();
 
     if (!trimmedMessage || isSending) {
+      return;
+    }
+
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      setError(`Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.`);
       return;
     }
 
@@ -37,7 +43,7 @@ export default function Home() {
         const errorPayload = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        throw new Error(errorPayload?.error ?? "Unable to send message");
+        throw new Error(errorPayload?.error ?? "Failed to send message.");
       }
 
       const data = (await response.json()) as SendResponse;
@@ -46,7 +52,7 @@ export default function Home() {
       setDraft("");
     } catch (sendError) {
       const message =
-        sendError instanceof Error ? sendError.message : "Unable to send message";
+        sendError instanceof Error ? sendError.message : "Failed to send message.";
       setError(message);
     } finally {
       setIsSending(false);
@@ -62,7 +68,12 @@ export default function Home() {
           draft={draft}
           error={error}
           isSending={isSending}
-          onDraftChange={setDraft}
+          onDraftChange={(value) => {
+            setDraft(value);
+            if (error) {
+              setError("");
+            }
+          }}
           onSubmit={handleSubmit}
         />
       </div>

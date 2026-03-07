@@ -16,15 +16,14 @@ function formatMessageTimestamp(timestamp: number) {
 export function ChatMessages({ messages }: ChatMessagesProps) {
   return (
     <div className="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,#ebe3d8_0%,#e3dacd_100%)] px-4 py-5 sm:px-5">
-      <div className="text-center text-xs font-medium text-slate-500/90">Demo chat</div>
+      <div className="text-center text-xs font-medium text-slate-500/90">Messages</div>
 
       {messages.length === 0 ? (
         <div className="flex min-h-80 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/70 p-8 text-center text-sm leading-7 text-muted sm:min-h-70">
-          ยังไม่มีข้อความ ลองส่งข้อความแรกได้เลย
+          No messages yet. Send the first one.
         </div>
       ) : (
         <>
-          <div className="text-center text-xs text-slate-500/90">Messages will appear here</div>
           {messages.map((message) => {
             const isUser = message.from === "user";
 

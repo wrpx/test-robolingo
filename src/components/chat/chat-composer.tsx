@@ -1,3 +1,5 @@
+import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
+
 interface ChatComposerProps {
   draft: string;
   error: string;
@@ -24,6 +26,7 @@ export function ChatComposer({
           rows={1}
           value={draft}
           onChange={(event) => onDraftChange(event.target.value)}
+          maxLength={MAX_MESSAGE_LENGTH}
           placeholder="Type a message"
           className="max-h-40 min-h-12 flex-1 resize-none rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-accent"
         />
@@ -32,8 +35,11 @@ export function ChatComposer({
           disabled={isSending || !draft.trim()}
           className="inline-flex h-12 min-w-24 items-center justify-center rounded-full bg-[#0b8457] px-5 text-sm font-semibold text-white transition hover:bg-[#086c47] disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          {isSending ? "Sending" : "Send"}
+          {isSending ? "Sending..." : "Send"}
         </button>
+      </div>
+      <div className="mt-2 text-right text-xs text-slate-500">
+        {draft.length}/{MAX_MESSAGE_LENGTH}
       </div>
       {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
     </form>
