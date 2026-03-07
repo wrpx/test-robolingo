@@ -20,12 +20,14 @@ npm run dev
 ```env
 LINE_CHANNEL_ACCESS_TOKEN=your_channel_access_token
 LINE_USER_ID=target_user_id
+LINE_CHANNEL_SECRET=your_channel_secret
 ```
 
 | ตัวแปร | คำอธิบาย |
 |--------|----------|
 | `LINE_CHANNEL_ACCESS_TOKEN` | Channel access token จาก LINE Developers Console |
 | `LINE_USER_ID` | User ID หรือ Group ID ที่จะรับข้อความ |
+| `LINE_CHANNEL_SECRET` | ใช้ตรวจสอบ webhook signature สำหรับการรับข้อความกลับจาก LINE |
 
 ## การทำงานของแอป
 
@@ -34,6 +36,14 @@ LINE_USER_ID=target_user_id
 3. ฝั่งเซิร์ฟเวอร์ตรวจสอบข้อความก่อนส่ง
 4. เซิร์ฟเวอร์เรียก LINE Messaging API เพื่อส่งข้อความไปยังปลายทางที่กำหนดใน `LINE_USER_ID`
 5. ถ้าส่งสำเร็จ ข้อความที่ส่งจะถูกแสดงบนหน้าเว็บ หากส่งไม่สำเร็จจะแสดงข้อความแจ้งเตือน
+
+## การรับข้อความกลับจาก LINE
+
+1. เปิดใช้งาน webhook ใน LINE Developers Console
+2. ตั้ง Webhook URL เป็น `https://test-robolingo.vercel.app/api/line/webhook`
+3. เมื่อมีข้อความใหม่จาก LINE ระบบจะส่งเข้ามาที่ webhook แล้วหน้าเว็บจะดึงข้อความล่าสุดมาแสดงอัตโนมัติ
+
+หมายเหตุ: การรับข้อความกลับในโปรเจกต์นี้ใช้ in-memory storage สำหรับเดโม ข้อมูลอาจหายได้เมื่อ instance ถูกรีสตาร์ทหรือ redeploy
 
 ## ลิงก์ทดสอบ
 

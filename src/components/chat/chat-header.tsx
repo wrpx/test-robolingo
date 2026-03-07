@@ -9,7 +9,7 @@ export function ChatHeader({ messageCount }: ChatHeaderProps) {
         <div>
           <p className="text-lg font-semibold">LINE OA Webchat</p>
           <p className="mt-1 text-sm text-emerald-100">
-            Send messages from webchat to LINE OA
+            Send and receive messages through LINE OA
           </p>
         </div>
         <div className="rounded-full bg-white/14 px-3 py-1 text-xs text-emerald-50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">

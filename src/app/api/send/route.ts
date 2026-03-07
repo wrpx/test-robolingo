@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
+import { addMessage } from "@/server/message-store";
 import { sendLineTextMessage } from "@/server/send-line-message";
+import type { ChatMessage } from "@/features/chat/types";
 
 export const runtime = "nodejs";
 
@@ -39,16 +41,19 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const newMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      text: trimmedMessage,
+      from: "user",
+      timestamp: Date.now(),
+    };
+
     await sendLineTextMessage(trimmedMessage);
+    addMessage(newMessage);
 
     return NextResponse.json({
       success: true,
-      message: {
-        id: crypto.randomUUID(),
-        text: trimmedMessage,
-        from: "user",
-        timestamp: Date.now(),
-      },
+      message: newMessage,
     });
   } catch (error) {
     console.error("Send message error:", error);

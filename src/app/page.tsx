@@ -5,13 +5,22 @@ import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
-import type { ChatMessage, SendResponse } from "@/features/chat/types";
+import type { SendResponse } from "@/features/chat/types";
+import { useChatMessages } from "@/features/chat/use-chat-messages";
 
 export default function Home() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { addMessages, messages } = useChatMessages();
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+
+  function handleDraftChange(value: string) {
+    setDraft(value);
+
+    if (error) {
+      setError("");
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +57,7 @@ export default function Home() {
 
       const data = (await response.json()) as SendResponse;
 
-      setMessages((currentMessages) => [...currentMessages, data.message]);
+      addMessages([data.message]);
       setDraft("");
     } catch (sendError) {
       const message =
@@ -68,12 +77,7 @@ export default function Home() {
           draft={draft}
           error={error}
           isSending={isSending}
-          onDraftChange={(value) => {
-            setDraft(value);
-            if (error) {
-              setError("");
-            }
-          }}
+          onDraftChange={handleDraftChange}
           onSubmit={handleSubmit}
         />
       </div>

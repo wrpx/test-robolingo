@@ -20,7 +20,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
 
       {messages.length === 0 ? (
         <div className="flex min-h-80 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/70 p-8 text-center text-sm leading-7 text-muted sm:min-h-70">
-          No messages yet. Send the first one.
+          No messages yet. Send the first one from webchat or LINE.
         </div>
       ) : (
         <>

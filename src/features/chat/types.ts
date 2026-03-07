@@ -9,3 +9,7 @@ export type SendResponse = {
   success: boolean;
   message: ChatMessage;
 };
+
+export type MessagesResponse = {
+  messages: ChatMessage[];
+};
