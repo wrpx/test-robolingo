@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
-import { addMessage } from "@/server/message-store";
+import { getLineDefaultTargetId } from "@/server/line-config";
+import { addMessage, getConversation, upsertConversation } from "@/server/message-store";
 import { sendLineTextMessage } from "@/server/send-line-message";
 import type { ChatMessage } from "@/features/chat/types";
 
@@ -20,9 +21,20 @@ export async function POST(req: NextRequest) {
     typeof payload === "object" && payload !== null && "message" in payload
       ? (payload as { message?: unknown }).message
       : undefined;
+  const conversationId =
+    typeof payload === "object" && payload !== null && "conversationId" in payload
+      ? (payload as { conversationId?: unknown }).conversationId
+      : undefined;
 
   if (typeof message !== "string") {
     return NextResponse.json({ error: "Message must be a string." }, { status: 400 });
+  }
+
+  if (conversationId !== undefined && typeof conversationId !== "string") {
+    return NextResponse.json(
+      { error: "Conversation ID must be a string." },
+      { status: 400 },
+    );
   }
 
   const trimmedMessage = message.trim();
@@ -41,19 +53,58 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const selectedConversation = conversationId ? getConversation(conversationId) : undefined;
+
+    if (conversationId && !selectedConversation) {
+      return NextResponse.json({ error: "Chat room not found." }, { status: 404 });
+    }
+
+    const defaultTargetId = getLineDefaultTargetId();
+    const targetId = selectedConversation
+      ? selectedConversation.replyTargetId
+      : defaultTargetId;
+
+    if (!targetId) {
+      return NextResponse.json(
+        { error: "Please select a chat room first." },
+        { status: 400 },
+      );
+    }
+
+    if (selectedConversation && !selectedConversation.canSend) {
+      return NextResponse.json(
+        { error: "This chat room cannot receive replies from the webchat." },
+        { status: 400 },
+      );
+    }
+
+    const resolvedConversation =
+      selectedConversation ??
+      getConversation(targetId) ??
+      upsertConversation({
+        id: targetId,
+        type: "unknown",
+        title: "Configured target",
+        replyTargetId: targetId,
+        canSend: true,
+      });
+
     const newMessage: ChatMessage = {
       id: crypto.randomUUID(),
       text: trimmedMessage,
       from: "user",
       timestamp: Date.now(),
+      conversationId: resolvedConversation.id,
+      conversationType: resolvedConversation.type,
     };
 
-    await sendLineTextMessage(trimmedMessage);
+    await sendLineTextMessage(trimmedMessage, targetId);
     addMessage(newMessage);
 
     return NextResponse.json({
       success: true,
       message: newMessage,
+      conversation: getConversation(resolvedConversation.id) ?? resolvedConversation,
     });
   } catch (error) {
     console.error("Send message error:", error);

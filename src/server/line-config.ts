@@ -2,7 +2,7 @@ import "server-only";
 
 export interface LineConfig {
   channelAccessToken: string;
-  lineUserId: string;
+  defaultTargetId?: string;
 }
 
 export interface LineWebhookConfig {
@@ -11,16 +11,20 @@ export interface LineWebhookConfig {
 
 export function getLineConfig(): LineConfig {
   const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  const lineUserId = process.env.LINE_USER_ID;
 
-  if (!channelAccessToken || !lineUserId) {
+  if (!channelAccessToken) {
     throw new Error("LINE configuration is incomplete");
   }
 
   return {
     channelAccessToken,
-    lineUserId,
+    defaultTargetId: getLineDefaultTargetId(),
   };
+}
+
+export function getLineDefaultTargetId() {
+  const lineUserId = process.env.LINE_USER_ID?.trim();
+  return lineUserId || undefined;
 }
 
 export function getLineWebhookConfig(): LineWebhookConfig {

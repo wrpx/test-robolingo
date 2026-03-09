@@ -4,6 +4,8 @@ interface ChatComposerProps {
   draft: string;
   error: string;
   isSending: boolean;
+  canSend: boolean;
+  placeholder?: string;
   onDraftChange: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
@@ -12,6 +14,8 @@ export function ChatComposer({
   draft,
   error,
   isSending,
+  canSend,
+  placeholder = "Type a message",
   onDraftChange,
   onSubmit,
 }: ChatComposerProps) {
@@ -26,13 +30,14 @@ export function ChatComposer({
           rows={1}
           value={draft}
           onChange={(event) => onDraftChange(event.target.value)}
+          disabled={!canSend}
           maxLength={MAX_MESSAGE_LENGTH}
-          placeholder="Type a message"
-          className="max-h-40 min-h-12 flex-1 resize-none rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-accent"
+          placeholder={placeholder}
+          className="max-h-40 min-h-12 flex-1 resize-none rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-accent disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
         />
         <button
           type="submit"
-          disabled={isSending || !draft.trim()}
+          disabled={!canSend || isSending || !draft.trim()}
           className="inline-flex h-12 min-w-24 items-center justify-center rounded-full bg-[#0b8457] px-5 text-sm font-semibold text-white transition hover:bg-[#086c47] disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {isSending ? "Sending..." : "Send"}

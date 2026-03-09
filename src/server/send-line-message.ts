@@ -1,17 +1,12 @@
 import "server-only";
 
-import { messagingApi } from "@line/bot-sdk";
-import { getLineConfig } from "@/server/line-config";
+import { getLineMessagingClient } from "@/server/line-client";
 
-export async function sendLineTextMessage(text: string) {
-  const { channelAccessToken, lineUserId } = getLineConfig();
-
-  const client = new messagingApi.MessagingApiClient({
-    channelAccessToken,
-  });
+export async function sendLineTextMessage(text: string, to: string) {
+  const client = getLineMessagingClient();
 
   await client.pushMessage({
-    to: lineUserId,
+    to,
     messages: [{ type: "text", text }],
   });
 }

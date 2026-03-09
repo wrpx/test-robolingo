@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import type { ChatMessage, MessagesResponse } from "@/features/chat/types";
+import type {
+  ChatConversation,
+  ChatMessage,
+  InboxResponse,
+} from "@/features/chat/types";
 
 const MESSAGE_POLL_INTERVAL_MS = 3000;
 
@@ -15,7 +19,31 @@ function mergeMessages(currentMessages: ChatMessage[], nextMessages: ChatMessage
   return [...messagesById.values()].sort((left, right) => left.timestamp - right.timestamp);
 }
 
-async function fetchLatestMessages(signal?: AbortSignal) {
+function mergeConversations(
+  currentConversations: ChatConversation[],
+  nextConversations: ChatConversation[],
+) {
+  const conversationsById = new Map(
+    currentConversations.map((conversation) => [conversation.id, conversation]),
+  );
+
+  for (const conversation of nextConversations) {
+    conversationsById.set(conversation.id, conversation);
+  }
+
+  return [...conversationsById.values()].sort((left, right) => {
+    const rightTimestamp = right.lastMessageTimestamp ?? 0;
+    const leftTimestamp = left.lastMessageTimestamp ?? 0;
+
+    if (rightTimestamp !== leftTimestamp) {
+      return rightTimestamp - leftTimestamp;
+    }
+
+    return left.title.localeCompare(right.title);
+  });
+}
+
+async function fetchLatestInbox(signal?: AbortSignal) {
   try {
     const response = await fetch("/api/messages", {
       cache: "no-store",
@@ -26,8 +54,7 @@ async function fetchLatestMessages(signal?: AbortSignal) {
       return null;
     }
 
-    const data = (await response.json()) as MessagesResponse;
-    return data.messages;
+    return (await response.json()) as InboxResponse;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       return null;
@@ -37,30 +64,34 @@ async function fetchLatestMessages(signal?: AbortSignal) {
   }
 }
 
-export function useChatMessages() {
+export function useChatInbox() {
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  const syncMessages = useEffectEvent(async (signal?: AbortSignal) => {
-    const nextMessages = await fetchLatestMessages(signal);
+  const syncInbox = useEffectEvent(async (signal?: AbortSignal) => {
+    const nextInbox = await fetchLatestInbox(signal);
 
-    if (!nextMessages) {
+    if (!nextInbox) {
       return;
     }
 
-    setMessages((currentMessages) => mergeMessages(currentMessages, nextMessages));
+    setConversations((currentConversations) =>
+      mergeConversations(currentConversations, nextInbox.conversations),
+    );
+    setMessages((currentMessages) => mergeMessages(currentMessages, nextInbox.messages));
   });
 
   useEffect(() => {
     const initialRequest = new AbortController();
     const inFlightRequests = new Set<AbortController>();
 
-    void syncMessages(initialRequest.signal);
+    void syncInbox(initialRequest.signal);
 
     const intervalId = window.setInterval(() => {
       const request = new AbortController();
       inFlightRequests.add(request);
 
-      void syncMessages(request.signal).finally(() => {
+      void syncInbox(request.signal).finally(() => {
         inFlightRequests.delete(request);
       });
     }, MESSAGE_POLL_INTERVAL_MS);
@@ -76,12 +107,16 @@ export function useChatMessages() {
     };
   }, []);
 
-  function addMessages(nextMessages: ChatMessage[]) {
-    setMessages((currentMessages) => mergeMessages(currentMessages, nextMessages));
+  function addSentMessage(message: ChatMessage, conversation: ChatConversation) {
+    setMessages((currentMessages) => mergeMessages(currentMessages, [message]));
+    setConversations((currentConversations) =>
+      mergeConversations(currentConversations, [conversation]),
+    );
   }
 
   return {
-    addMessages,
+    addSentMessage,
+    conversations,
     messages,
   };
 }

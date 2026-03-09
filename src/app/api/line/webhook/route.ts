@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSignature, type WebhookRequestBody } from "@line/bot-sdk";
-import { addMessage } from "@/server/message-store";
+import { addMessage, upsertConversation } from "@/server/message-store";
 import { getLineWebhookConfig } from "@/server/line-config";
+import {
+  getConversationDescriptor,
+  getConversationPresentation,
+  getSenderProfile,
+} from "@/server/line-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,11 +40,40 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
+      const descriptor = getConversationDescriptor(event.source, event.webhookEventId);
+      const sender = await getSenderProfile(event.source);
+      const presentation = await getConversationPresentation(
+        event.source,
+        descriptor,
+        sender,
+      );
+
+      upsertConversation({
+        id: descriptor.id,
+        type: descriptor.type,
+        title: presentation.title ?? descriptor.defaultTitle,
+        imageUrl: presentation.imageUrl,
+        replyTargetId: descriptor.replyTargetId,
+        canSend: descriptor.canSend,
+      });
+
       addMessage({
         id: event.webhookEventId,
         text: event.message.text,
         from: "line",
         timestamp: event.timestamp,
+        conversationId: descriptor.id,
+        conversationType: descriptor.type,
+        sender:
+          sender ??
+          (event.source.userId
+            ? {
+                lineUserId: event.source.userId,
+                displayName: `LINE user ${event.source.userId.slice(-6)}`,
+              }
+            : {
+                displayName: "Unknown sender",
+              }),
       });
     }
 
