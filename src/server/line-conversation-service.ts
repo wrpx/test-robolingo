@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { WebhookRequestBody } from "@line/bot-sdk";
-import type { ChatSender, ConversationType } from "@/features/chat/types";
+import type { ConversationType } from "@/features/chat/conversation";
+import type { ChatSender } from "@/features/chat/message";
 import { getLineMessagingClient } from "@/server/line-client";
 
 type EventSource = WebhookRequestBody["events"][number]["source"];

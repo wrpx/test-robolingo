@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSignature, type WebhookRequestBody } from "@line/bot-sdk";
-import { addMessage, upsertConversation } from "@/server/message-store";
+import { addMessage, upsertConversation } from "@/server/chat-store";
 import { getLineWebhookConfig } from "@/server/line-config";
 import {
   getConversationDescriptor,
   getConversationPresentation,
   getSenderProfile,
-} from "@/server/line-profile";
+} from "@/server/line-conversation-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

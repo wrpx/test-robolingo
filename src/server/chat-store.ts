@@ -2,9 +2,9 @@ import "server-only";
 
 import type {
   ChatConversation,
-  ChatMessage,
   ConversationType,
-} from "@/features/chat/types";
+} from "@/features/chat/conversation";
+import type { ChatMessage } from "@/features/chat/message";
 
 const MAX_STORED_MESSAGES = 200;
 const messages: ChatMessage[] = [];

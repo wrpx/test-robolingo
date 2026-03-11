@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
 import { getLineDefaultTargetId } from "@/server/line-config";
-import { addMessage, getConversation, upsertConversation } from "@/server/message-store";
+import { addMessage, getConversation, upsertConversation } from "@/server/chat-store";
 import { sendLineTextMessage } from "@/server/send-line-message";
-import type { ChatMessage } from "@/features/chat/types";
+import type { ChatMessage } from "@/features/chat/message";
 
 export const runtime = "nodejs";
 

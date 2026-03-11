@@ -1,6 +1,6 @@
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
 
-interface ChatComposerProps {
+interface ChatMessageInputProps {
   draft: string;
   error: string;
   isSending: boolean;
@@ -10,7 +10,7 @@ interface ChatComposerProps {
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
-export function ChatComposer({
+export function ChatMessageInput({
   draft,
   error,
   isSending,
@@ -18,7 +18,7 @@ export function ChatComposer({
   placeholder = "Type a message",
   onDraftChange,
   onSubmit,
-}: ChatComposerProps) {
+}: ChatMessageInputProps) {
   return (
     <form
       onSubmit={onSubmit}

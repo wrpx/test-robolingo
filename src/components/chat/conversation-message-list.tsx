@@ -1,7 +1,8 @@
-import type { ChatConversation, ChatMessage } from "@/features/chat/types";
+import type { ChatConversation } from "@/features/chat/conversation";
+import type { ChatMessage } from "@/features/chat/message";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
 
-interface ChatMessagesProps {
+interface ConversationMessageListProps {
   conversation?: ChatConversation;
   messages: ChatMessage[];
 }
@@ -15,7 +16,10 @@ function formatMessageTimestamp(timestamp: number) {
   });
 }
 
-export function ChatMessages({ conversation, messages }: ChatMessagesProps) {
+export function ConversationMessageList({
+  conversation,
+  messages,
+}: ConversationMessageListProps) {
   if (!conversation) {
     return (
       <div className="flex flex-1 items-center justify-center bg-[linear-gradient(180deg,#ebe3d8_0%,#e3dacd_100%)] px-4 py-5 sm:px-5">

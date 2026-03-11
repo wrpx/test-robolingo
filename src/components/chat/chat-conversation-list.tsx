@@ -1,4 +1,4 @@
-import type { ChatConversation } from "@/features/chat/types";
+import type { ChatConversation } from "@/features/chat/conversation";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
 
 interface ChatConversationListProps {

@@ -1,32 +1,25 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { ChatComposer } from "@/components/chat/chat-composer";
+import { FormEvent, useState } from "react";
+import { ChatMessageInput } from "@/components/chat/chat-message-input";
 import { ChatConversationList } from "@/components/chat/chat-conversation-list";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { ChatMessages } from "@/components/chat/chat-messages";
+import { ConversationMessageList } from "@/components/chat/conversation-message-list";
 import { MAX_MESSAGE_LENGTH } from "@/features/chat/constants";
-import type { SendResponse } from "@/features/chat/types";
-import { useChatInbox } from "@/features/chat/use-chat-messages";
+import { useChatInbox } from "@/features/chat/hooks/use-chat-inbox";
+import { useSendChatMessage } from "@/features/chat/hooks/use-send-chat-message";
 
 export default function Home() {
-  const { addSentMessage, conversations, messages } = useChatInbox();
+  const { conversations, messages } = useChatInbox();
+  const sendMessage = useSendChatMessage();
   const [draft, setDraft] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [selectedConversationId, setSelectedConversationId] = useState("");
-
-  useEffect(() => {
-    if (selectedConversationId && conversations.some((item) => item.id === selectedConversationId)) {
-      return;
-    }
-
-    setSelectedConversationId(conversations[0]?.id ?? "");
-  }, [conversations, selectedConversationId]);
 
   const selectedConversation =
     conversations.find((conversation) => conversation.id === selectedConversationId) ??
     conversations[0];
+  const activeConversationId = selectedConversation?.id ?? "";
   const visibleMessages = selectedConversation
     ? messages.filter((message) => message.conversationId === selectedConversation.id)
     : [];
@@ -45,7 +38,7 @@ export default function Home() {
     const trimmedMessage = draft.trim();
     const activeConversation = selectedConversation;
 
-    if (!trimmedMessage || isSending) {
+    if (!trimmedMessage || sendMessage.isPending) {
       return;
     }
 
@@ -54,39 +47,19 @@ export default function Home() {
       return;
     }
 
-    setIsSending(true);
     setError("");
 
     try {
-      const response = await fetch("/api/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: trimmedMessage,
-          conversationId: activeConversation?.id,
-        }),
+      const data = await sendMessage.mutateAsync({
+        message: trimmedMessage,
+        conversationId: activeConversation?.id,
       });
-
-      if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        throw new Error(errorPayload?.error ?? "Failed to send message.");
-      }
-
-      const data = (await response.json()) as SendResponse;
-
-      addSentMessage(data.message, data.conversation);
       setSelectedConversationId(data.conversation.id);
       setDraft("");
     } catch (sendError) {
       const message =
         sendError instanceof Error ? sendError.message : "Failed to send message.";
       setError(message);
-    } finally {
-      setIsSending(false);
     }
   }
 
@@ -101,15 +74,18 @@ export default function Home() {
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <ChatConversationList
             conversations={conversations}
-            selectedConversationId={selectedConversation?.id ?? ""}
+            selectedConversationId={activeConversationId}
             onSelectConversation={setSelectedConversationId}
           />
           <div className="flex min-h-0 flex-1 flex-col">
-            <ChatMessages conversation={selectedConversation} messages={visibleMessages} />
-            <ChatComposer
+            <ConversationMessageList
+              conversation={selectedConversation}
+              messages={visibleMessages}
+            />
+            <ChatMessageInput
               draft={draft}
               error={error}
-              isSending={isSending}
+              isSending={sendMessage.isPending}
               canSend={selectedConversation?.canSend ?? false}
               placeholder={
                 selectedConversation?.canSend

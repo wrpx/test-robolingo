@@ -4,7 +4,7 @@ import {
   listConversations,
   listMessages,
   upsertConversation,
-} from "@/server/message-store";
+} from "@/server/chat-store";
 import { getLineDefaultTargetId } from "@/server/line-config";
 
 export const runtime = "nodejs";
